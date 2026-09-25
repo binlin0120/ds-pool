@@ -1,0 +1,22 @@
+[Unit]
+Description=universal-web-api #2 (127.0.0.1:8200 -> CDP 9223)
+After=chrome-webapi2.service
+Wants=chrome-webapi2.service
+
+[Service]
+User=webapi
+Group=webapi
+WorkingDirectory=/opt/uwa2/universal-web-api
+Environment=DISPLAY=:99
+Environment=LANG=zh_CN.UTF-8
+Environment=PYTHONUTF8=1
+Environment=PYTHONIOENCODING=utf-8
+ExecStart=/opt/uwa/venv/bin/python main.py
+Restart=always
+RestartSec=5
+MemoryMax=600M
+StandardOutput=append:/home/webapi/logs/uwa2.log
+StandardError=append:/home/webapi/logs/uwa2.log
+
+[Install]
+WantedBy=multi-user.target

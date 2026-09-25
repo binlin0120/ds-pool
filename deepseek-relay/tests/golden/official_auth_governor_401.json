@@ -1,0 +1,1 @@
+{"name":"official_auth_governor_401","note":"api.deepseek.com 无 key / 错 key：Authentication Fails (governor)","status":401,"headers":{"content-type":"application/json"},"body":"{\"error\":{\"message\":\"Authentication Fails (governor)\",\"type\":\"authentication_error\",\"param\":null,\"code\":\"invalid_api_key\"}}"}

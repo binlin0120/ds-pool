@@ -1,0 +1,487 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>ds-pool 号池网关</title>
+<style>
+:root{
+  --bg:#eef1f4; --panel:#ffffff; --line:#dde3e8; --ink:#1d242b; --mut:#64707c;
+  --accent:#0c6b5c; --ok:#15803d; --warn:#b45309; --bad:#b91c1c; --info:#1d4ed8;
+  --radius:8px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font:14px/1.5 system-ui,"Segoe UI","Microsoft YaHei",sans-serif}
+header{display:flex;align-items:center;gap:14px;padding:12px 18px;background:var(--panel);
+  border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:8px;font-weight:700;font-size:16px}
+.brand .dot{width:9px;height:9px;border-radius:50%;background:var(--mut);box-shadow:0 0 0 3px rgba(0,0,0,.06)}
+.brand.ok .dot{background:var(--ok)} .brand.err .dot{background:var(--bad)}
+.brand .sub{color:var(--mut);font-weight:400;font-size:13px}
+.meta{color:var(--mut);font-size:12px;font-variant-numeric:tabular-nums}
+.spacer{flex:1}
+button,select,input{font:inherit}
+.tools{display:flex;gap:8px;align-items:center}
+button{border:1px solid var(--line);background:#fff;border-radius:var(--radius);
+  padding:5px 10px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;color:var(--ink)}
+button:hover{border-color:var(--accent)}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+button.danger:hover{border-color:var(--bad);color:var(--bad)}
+button:disabled{opacity:.5;cursor:not-allowed}
+button svg{width:15px;height:15px;flex:none}
+select,input[type=text],input[type=password]{border:1px solid var(--line);border-radius:var(--radius);
+  padding:5px 8px;background:#fff;color:var(--ink)}
+.tokenbar{display:none;background:#fdf3e3;border-bottom:1px solid #f0d5a8;padding:10px 18px;gap:10px;align-items:center}
+.tokenbar.show{display:flex;flex-wrap:wrap}
+.tokenbar input{flex:1;min-width:240px}
+.tokenbar .hint{color:var(--warn);font-size:12px}
+main{max-width:1180px;margin:16px auto;padding:0 16px;display:flex;flex-direction:column;gap:14px}
+.strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px}
+.metric{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:10px 12px}
+.metric .k{color:var(--mut);font-size:12px}
+.metric .v{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;margin-top:2px}
+.metric .v.bad{color:var(--bad)} .metric .v.good{color:var(--ok)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px}
+.panel h2{margin:0 0 10px;font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px}
+.panel h2 .cnt{color:var(--mut);font-weight:400;font-size:12px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--mut);font-weight:600;font-size:12px;white-space:nowrap}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+.ups .row{display:grid;grid-template-columns:1.1fr 1.4fr 1fr 1fr 1.4fr 1.6fr auto;gap:8px;
+  align-items:center;padding:9px 6px;border-bottom:1px solid var(--line)}
+.ups .row:last-child{border-bottom:0}
+.grow{flex:1}
+.actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.pill{display:inline-flex;align-items:center;gap:5px;padding:1px 8px;border-radius:99px;
+  font-size:12px;font-weight:600;border:1px solid transparent}
+.pill.ready{background:#e7f6ec;color:var(--ok)} .pill.busy{background:#e8f1ff;color:var(--info)}
+.pill.cooling{background:#fdf0e3;color:var(--warn)} .pill.off{background:#fdeaea;color:var(--bad)}
+.err{color:var(--bad);font-size:12px;word-break:break-all;max-width:46ch;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
+.mut{color:var(--mut)} .sm{font-size:12px} .mono{font-family:ui-monospace,Consolas,monospace;font-size:12px}
+.grid2{display:grid;grid-template-columns:1.15fr .85fr;gap:14px;align-items:start}
+@media (max-width:900px){.grid2{grid-template-columns:1fr}.ups .row{grid-template-columns:1fr 1fr;gap:6px 10px}}
+.testbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.testbar input[type=text]{flex:1;min-width:220px}
+#testOut{margin-top:10px;display:none}
+#testOut.show{display:block;background:#f7f9fb;border:1px solid var(--line);border-radius:var(--radius);
+  padding:10px 12px;white-space:pre-wrap;font-size:13px}
+footer{color:var(--mut);font-size:12px;padding:8px 2px 26px;display:flex;gap:12px;flex-wrap:wrap}
+.badge{display:inline-block;background:#e8eef2;border-radius:99px;padding:0 8px;font-size:11px}
+.hist-wrap{max-height:320px;overflow:auto}
+.cfg{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:13px}
+.cfg dt{color:var(--mut)} .cfg dd{margin:0;font-variant-numeric:tabular-nums;word-break:break-all}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#17191c;--panel:#202327;--line:#33383f;--ink:#e6eaee;--mut:#9aa4af}
+  button,select,input[type=text],input[type=password]{background:#2a2e34;color:var(--ink);border-color:#3a4048}
+  #testOut{background:#2a2e34}.badge{background:#2f343b}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand" id="brand"><span class="dot"></span>ds-pool<span class="sub">号池网关</span></div>
+  <div class="meta" id="metaTop">正在读取…</div>
+  <div class="spacer"></div>
+  <div class="tools">
+    <select id="autoSel" title="自动刷新">
+      <option value="0">自动刷新 关</option>
+      <option value="5">5 秒</option>
+      <option value="15" selected>15 秒</option>
+      <option value="30">30 秒</option>
+      <option value="60">60 秒</option>
+    </select>
+    <button id="btnRefresh" title="刷新"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6"/></svg>刷新</button>
+    <button id="btnToken" title="设置访问令牌"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>令牌</button>
+  </div>
+</header>
+<div class="tokenbar" id="tokenBar">
+  <span class="hint">网关令牌（POOL_TOKENS，只存在这个浏览器里）</span>
+  <input type="password" id="tokenInput" placeholder="Bearer token" autocomplete="off">
+  <button class="primary" id="btnSaveToken">保存</button>
+  <button id="btnClearToken">清除</button>
+</div>
+<main>
+  <div class="strip" id="strip"></div>
+  <section class="panel">
+    <h2>实例 <span class="cnt" id="upCnt"></span></h2>
+    <div class="ups" id="ups"></div>
+  </section>
+  <section class="panel">
+    <h2>试一条消息 <span class="cnt">直接打网关 /v1/chat/completions</span></h2>
+    <div class="testbar">
+      <select id="testModel"></select>
+      <input type="text" id="testPrompt" placeholder="输入要问的内容" value="你好，简单回应一下">
+      <button class="primary" id="btnSend"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>发送</button>
+    </div>
+    <div id="testOut"></div>
+  </section>
+  <div class="grid2">
+    <section class="panel">
+      <h2>按天历史</h2>
+      <div class="hist-wrap"><table id="hist"><thead><tr><th>日期</th><th class="num">请求</th><th class="num">成功</th><th class="num">失败</th><th class="num">重试</th><th class="num">Prompt</th><th class="num">补全</th></tr></thead><tbody></tbody></table></div>
+    </section>
+    <section class="panel">
+      <h2>运行配置</h2>
+      <dl class="cfg" id="cfg"></dl>
+    </section>
+  </div>
+</main>
+<footer id="foot"></footer>
+<script>
+(function(){
+"use strict";
+var _q = new URLSearchParams(location.search);
+var DEMO = _q.get("demo") === "1";
+var _urlToken = _q.get("token") || _q.get("api_key") || "";
+if (_urlToken) localStorage.setItem("dspool.token", _urlToken);
+var M = {};
+var U = null;
+var models = [];
+var state = {token: localStorage.getItem("dspool.token") || "", timer: 0, busy: false};
+var $ = function(s){ return document.querySelector(s); };
+
+var DEMO_STATUS = {
+  service: "ds-pool", time: "2026-09-18 16:20:00", uptime: 86400,
+  default_model: "chat.deepseek.com", per_upstream_concurrency: 1, cooldown: 300,
+  queue_timeout: 180, inflight: 1,
+  stats: {req: 320, ok: 318, fail: 2, retry: 3, auth_fail: 0},
+  upstreams: [
+    {id: "ds1", account: "cohen-p1", base: "http://127.0.0.1:8199", model: "chat.deepseek.com",
+     inflight: 0, state: "ready", cooldown_left: 0, ok: 162, fail: 1, lat_ema: 3.4,
+     last_ok_at: 1789718000, last_error: null, services: ["uwa-webapi", "chrome-webapi"],
+     login: "ok", login_checked_at: 1789718000, login_error: null, login_profile: "/home/webapi/chrome_profile"},
+    {id: "ds2", account: "cohen-p2", base: "http://127.0.0.1:8200", model: "chat.deepseek.com",
+     inflight: 1, state: "busy", cooldown_left: 0, ok: 156, fail: 1, lat_ema: 4.1,
+     last_ok_at: 1789717980, last_error: "429 too many requests", services: ["uwa-webapi2", "chrome-webapi2"],
+     login: "signed_out", login_checked_at: 1789717970, login_error: "页面停在登录页", login_profile: "/home/webapi/profiles/bel"}
+  ],
+  accounts_available: ["bel", "cohen", "upm"],
+  login_state_updated_at: 1789718010,
+  usage: {
+    date: "2026-09-18",
+    today: {req: 320, ok: 318, fail: 2, retry: 3, prompt: 4220, compl: 1350, tokens: 5570},
+    lifetime: {req: 320, ok: 318, fail: 2, retry: 3, prompt: 4220, compl: 1350, tokens: 5570},
+    accounts: {
+      "ds1": {req: 162, ok: 162, fail: 0, retry: 0, prompt: 2100, compl: 700, tokens: 2800, total: {req: 162}, last_used: 1789718000},
+      "ds2": {req: 158, ok: 156, fail: 2, retry: 3, prompt: 2120, compl: 650, tokens: 2770, total: {req: 158}, last_used: 1789717980}
+    },
+    history: {
+      "2026-09-18": {req: 320, ok: 318, fail: 2, retry: 3, prompt: 4220, compl: 1350, tokens: 5570},
+      "2026-09-17": {req: 210, ok: 210, fail: 0, retry: 0, prompt: 2900, compl: 860, tokens: 3760}
+    }
+  }
+};
+
+function esc(s){
+  return String(s == null ? "" : s).replace(/[&<>"']/g, function(ch){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[ch];
+  });
+}
+function fmtNum(n){ return Number(n == null ? 0 : n).toLocaleString("zh-CN"); }
+function fmtDur(sec){
+  sec = Math.max(0, Math.floor(Number(sec) || 0));
+  var d = Math.floor(sec / 86400), h = Math.floor(sec % 86400 / 3600), m = Math.floor(sec % 3600 / 60);
+  var parts = [];
+  if (d) parts.push(d + "天");
+  if (h) parts.push(h + "时");
+  if (m) parts.push(m + "分");
+  if (!parts.length) parts.push(sec + "秒");
+  return parts.slice(0, 2).join(" ");
+}
+function fmtTime(ts){
+  if (!ts) return "—";
+  var d = new Date(ts * 1000), p = function(x){ return (x < 10 ? "0" : "") + x; };
+  return p(d.getMonth() + 1) + "-" + p(d.getDate()) + " " + p(d.getHours()) + ":" + p(d.getMinutes());
+}
+function toast(msg, kind){
+  var el = document.createElement("div");
+  el.style.cssText = "position:fixed;right:16px;bottom:16px;z-index:99;background:#1d242b;color:#fff;" +
+    "padding:9px 14px;border-radius:8px;font-size:13px;box-shadow:0 4px 14px rgba(0,0,0,.25)";
+  if (kind === "ok") el.style.background = "#15803d";
+  if (kind === "err") el.style.background = "#b91c1c";
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(function(){ el.remove(); }, 3800);
+}
+
+function headers(){
+  var h = {"Content-Type": "application/json"};
+  if (state.token) h["Authorization"] = "Bearer " + state.token;
+  return h;
+}
+function api(path, method, body){
+  var opt = {method: method || "GET", headers: headers()};
+  if (body !== undefined) opt.body = JSON.stringify(body);
+  return fetch(path, opt).then(function(r){
+    return r.text().then(function(t){
+      var j = null; try { j = JSON.parse(t); } catch (e) {}
+      return {status: r.status, json: j, text: t};
+    });
+  });
+}
+function demoData(path){
+  if (path === "/health") return Promise.resolve({status: 200, json: {ok: true}});
+  if (path === "/v1/models") return Promise.resolve({status: 200, json: {data: [
+    {id: "deepseek-v4.1-flash"}, {id: "deepseek-v4-pro"}, {id: "deepseek-v4-flash"},
+    {id: "deepseek-chat"}, {id: "deepseek-reasoner"}]}});
+  return Promise.resolve({status: 200, json: DEMO_STATUS});
+}
+
+var lastFail401 = false;
+function refresh(){
+  if (state.busy) return;
+  state.busy = true;
+  var p1 = DEMO ? demoData("/pool/status") : api("/pool/status");
+  var p2 = DEMO ? demoData("/pool/usage") : api("/pool/usage");
+  var p3 = DEMO ? demoData("/v1/models") : api("/v1/models");
+  Promise.all([p1, p2, p3]).then(function(res){
+    state.busy = false;
+    var s = res[0].json, u = res[1].json, m = res[2].json;
+    if (s && s.upstreams) M = s;
+    if (u && u.usage) U = u.usage;
+    if (m && m.data) models = m.data.map(function(x){ return x.id; });
+    if ((res[0].status === 401 || res[1].status === 401) && !DEMO) {
+      if (!lastFail401) { lastFail401 = true; toast("令牌无效或未设置，请点右上角「令牌」", "err"); }
+      $("#tokenBar").classList.add("show");
+    } else {
+      lastFail401 = false;
+      $("#tokenBar").classList.remove("show");
+    }
+    render();
+  }).catch(function(e){
+    state.busy = false;
+    if (!DEMO) { $("#metaTop").textContent = "请求失败：" + e.message; }
+  });
+}
+
+function render(){
+  var ok = M && M.stats;
+  var brand = $("#brand");
+  brand.classList.remove("ok", "err");
+  if (ok) brand.classList.add(M.stats.fail > 0 || (M.upstreams || []).some(function(u){ return u.state === "cooling"; }) ? "err" : "ok");
+  $("#metaTop").textContent = (ok ? (M.service + " · 运行 " + fmtDur(M.uptime) + (M.inflight ? " · 在途 " + M.inflight : "")) : "未连接")
+    + (DEMO ? " · 演示数据" : "") + " · " + (M.time || "");
+  if (ok) renderStrip(M.stats, M.inflight);
+  if (ok && M.upstreams) renderUps(M.upstreams);
+  if (U) { renderHist(); renderCfg(); }
+  renderModels();
+  renderFoot();
+}
+
+function renderStrip(st, inflight){
+  var fail = (U && U.today.fail) || 0;
+  var items = [
+    ["今日请求", fmtNum((U && U.today.req) || st.req), ""],
+    ["成功", fmtNum((U && U.today.ok) || st.ok), "good"],
+    ["失败", fmtNum(fail), fail > 0 ? "bad" : ""],
+    ["重试", fmtNum((U && U.today.retry) || st.retry), ""],
+    ["鉴权失败", fmtNum(st.auth_fail), st.auth_fail > 0 ? "bad" : ""],
+    ["在途", fmtNum(inflight), ""]
+  ];
+  $("#strip").innerHTML = items.map(function(x){
+    return '<div class="metric"><div class="k">' + x[0] + '</div><div class="v ' + x[2] + '">' + x[1] + "</div></div>";
+  }).join("");
+}
+
+function pillState(u){
+  if (u.state === "cooling") return '<span class="pill cooling">冷却 ' + fmtDur(u.cooldown_left) + '</span>';
+  if (u.state === "busy") return '<span class="pill busy">在途 ' + u.inflight + "</span>";
+  return '<span class="pill ready">就绪</span>';
+}
+
+function loginPill(u){
+  var st = u.login;
+  if (!st) return '<span class="sm mut">登录 —</span>';
+  var map = {
+    ok: ["登录正常", "ready"], signed_out: ["掉登录", "off"],
+    login_failed: ["重登失败", "off"], no_tab: ["无标签", "off"],
+    cdp_down: ["CDP 掉", "off"], no_pointer: ["无指针", "off"],
+    no_profile: ["无Profile", "off"], deferred: ["排队处理", "busy"],
+    unknown: ["未知", ""]
+  };
+  var m = map[st] || [st, "off"];
+  var tip = u.login_error ? ' title="' + esc(u.login_error) + '"' : "";
+  return '<span class="pill ' + m[1] + '"' + tip + ">" + m[0] + "</span>";
+}
+
+function renderUps(ups){
+  $("#upCnt").textContent = ups.length + " 台";
+  $("#ups").innerHTML = ups.map(function(u){
+    var a = (U && U.accounts) ? (U.accounts[u.id] || {}) : {};
+    var today = "req " + fmtNum(a.req || 0) + " · " + fmtNum((a.prompt || 0) + (a.compl || 0)) + " tok";
+    var total = "req " + fmtNum((a.total && a.total.req) || 0) + " · 活跃 " + (a.active_days != null ? a.active_days + "天" : "—") + " · 最近 " + fmtTime(a.last_used);
+    var svc = u.services || [];
+    var b = function(name, label){
+      if (!name) return "";
+      return '<button class="svc-btn" data-svc="' + esc(name) + '" data-up="' + esc(u.id) + '" title="systemctl restart ' + esc(name) + '">' + label + "</button>";
+    };
+    var avail = (M && M.accounts_available) || [];
+    var switchBox = avail.length ? '<span class="acct-box" style="display:inline-flex;gap:6px;align-items:center">' +
+      '<select class="acct-sel" data-up="' + esc(u.id) + '">' +
+      avail.map(function(a){ return '<option value="' + esc(a) + '">' + esc(a) + "</option>"; }).join("") +
+      '</select><button class="switch-btn" data-up="' + esc(u.id) + '" title="切换账号 = 换 profile 并重启该实例 Chrome（需等待重新登录）">切换</button></span>' : "";
+    return '<div class="row">' +
+      '<div><div class="mono" style="font-weight:700">' + esc(u.id) + '</div><div class="sm mut">' + fmtTime(u.last_ok_at) + "</div></div>" +
+      '<div><div>' + esc(u.account || "?") + " " + loginPill(u) + '</div><div class="sm mut">' + esc((u.base || "").replace(/\/$/, "")) + "</div></div>" +
+      "<div>" + pillState(u) + "</div>" +
+      '<div class="sm">' + fmtNum(u.ok) + " / " + fmtNum(u.fail) + '<div class="mut">' + (u.lat_ema ? u.lat_ema.toFixed(1) + "s" : "—") + " 均延迟</div></div>" +
+      '<div class="sm"><div>' + today + '</div><div class="mut">' + total + "</div></div>" +
+      '<div class="sm">' + (u.last_error ? '<span class="err" title="' + esc(u.last_error) + '">' + esc(u.last_error) + "</span>" : '<span class="mut">正常</span>') + "</div>" +
+      '<div class="actions">' +
+        switchBox +
+        '<button class="reset-btn" data-up="' + esc(u.id) + '" title="清掉冷却，立即重新参与轮询"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 10 4 5v6h6Z"/><path d="m15 14 5 5v-6h-6Z"/><path d="M12 3a9 9 0 0 1 6.4 15L15 21"/></svg>解除冷却</button>' +
+        b(svc[0] || "", "重启桥接") +
+        b(svc[1] || "", "重启浏览器") +
+      "</div>" +
+      "</div>";
+  }).join("");
+  bindUps(ups);
+}
+
+function bindUps(ups){
+  document.querySelectorAll(".reset-btn").forEach(function(b){
+    b.onclick = function(){
+      b.disabled = true;
+      api("/pool/upstream/" + b.getAttribute("data-up") + "/reset", "POST", {}).then(function(r){
+        b.disabled = false;
+        if (r.status === 200) toast("已解除冷却：" + b.getAttribute("data-up"), "ok");
+        else toast("失败：" + (r.json && r.json.error ? r.json.error.message : r.status), "err");
+        refresh();
+      });
+    };
+  });
+  document.querySelectorAll(".svc-btn").forEach(function(b){
+    b.onclick = function(){
+      var svc = b.getAttribute("data-svc"), up = b.getAttribute("data-up");
+      if (!window.confirm("确认重启服务 " + svc + " ？\n这个浏览器实例上的会话会被打断。")) return;
+      b.disabled = true;
+      api("/pool/service/" + svc + "/restart", "POST", {}).then(function(r){
+        b.disabled = false;
+        if (r.status === 200) toast("已重启 " + svc + "：" + (r.json && r.json.result), "ok");
+        else toast("失败：" + (r.json && r.json.error ? r.json.error.message : r.status), "err");
+        refresh();
+      });
+    };
+  });
+  document.querySelectorAll(".switch-btn").forEach(function(b){
+    b.onclick = function(){
+      var up = b.getAttribute("data-up");
+      var sel = document.querySelector('.acct-sel[data-up="' + up + '"]');
+      var acct = sel ? sel.value : "";
+      if (!acct) return;
+      if (!window.confirm("确认把 " + up + " 切换到账号 " + acct + " ？\n会重启该实例的 Chrome（+桥接），正在跑的会话会中断，切换后停在登录页会由健康探针自动重登。")) return;
+      b.disabled = true;
+      api("/pool/switch/" + up + "/account/" + encodeURIComponent(acct), "POST", {}).then(function(r){
+        b.disabled = false;
+        if (r.status === 200) toast("切换指令已执行：" + up + " -> " + acct, "ok");
+        else toast("失败：" + (r.json && r.json.error ? r.json.error.message : r.status), "err");
+        setTimeout(refresh, 2000);
+      });
+    };
+  });
+}
+
+function renderHist(){
+  var rows = U.history ? Object.keys(U.history).sort().reverse() : [];
+  var tb = $("#hist tbody");
+  tb.innerHTML = rows.map(function(k){
+    var h = U.history[k] || {};
+    return "<tr><td>" + esc(k) + "</td><td class=\"num\">" + fmtNum(h.req) + "</td><td class=\"num\">" + fmtNum(h.ok) +
+      "</td><td class=\"num\">" + fmtNum(h.fail) + "</td><td class=\"num\">" + fmtNum(h.retry) +
+      "</td><td class=\"num\">" + fmtNum(h.prompt) + "</td><td class=\"num\">" + fmtNum(h.compl) + "</td></tr>";
+  }).join("") || '<tr><td colspan="7" class="mut">暂无历史</td></tr>';
+}
+
+function renderCfg(){
+  var cfg = [
+    ["默认模型", M.default_model],
+    ["单实例并发", M.per_upstream_concurrency],
+    ["失败冷却", M.cooldown + " 秒"],
+    ["排队超时", M.queue_timeout + " 秒"],
+    ["用量文件", U && U.stats_file ? U.stats_file : "—"],
+    ["今日 Token", U ? fmtNum(U.today.tokens) + "（prompt " + fmtNum(U.today.prompt) + " / compl " + fmtNum(U.today.compl) + "）" : "—"],
+    ["累计请求", U ? fmtNum(U.lifetime.req) + "（成功 " + fmtNum(U.lifetime.ok) + "，失败 " + fmtNum(U.lifetime.fail) + "）" : "—"]
+  ];
+  $("#cfg").innerHTML = cfg.map(function(x){
+    return "<dt>" + esc(x[0]) + "</dt><dd>" + esc(x[1]) + "</dd>";
+  }).join("");
+}
+
+function renderModels(){
+  if (!models.length) return;
+  var sel = $("#testModel");
+  var cur = sel.value;
+  sel.innerHTML = models.map(function(m){ return '<option value="' + esc(m) + '">' + esc(m) + "</option>"; }).join("");
+  if (cur && models.indexOf(cur) >= 0) sel.value = cur;
+}
+
+function renderFoot(){
+  $("#foot").innerHTML =
+    '<span>端点：<span class="mono">/v1/chat/completions · /v1/models · /pool/status · /pool/usage · /pool/switch/&lt;dsN&gt;/account/&lt;acct&gt; · /health</span></span>'
+    + '<span class="badge">ds-pool 网关管理页</span>'
+    + '<a href="?demo=1" style="color:inherit">演示数据</a>';
+}
+
+function sendTest(){
+  var model = $("#testModel").value || "deepseek-chat";
+  var prompt = $("#testPrompt").value.trim() || "你好";
+  var out = $("#testOut");
+  out.classList.add("show");
+  out.textContent = "发送 " + model + " …";
+  var p = DEMO ? demoData("/pool/status") : api("/v1/chat/completions", "POST", {
+    model: model, messages: [{role: "user", content: prompt}], stream: false
+  });
+  p.then(function(r){
+    if (r.status !== 200) {
+      out.textContent = "HTTP " + r.status + "\n" + (r.json && r.json.error ? r.json.error.message : r.text || "");
+      return;
+    }
+    var j = r.json, ch = (j.choices || [{}])[0], msg = ch.message || {}, pool = j.pool || {};
+    out.textContent = "HTTP 200 · 上游 " + (pool.upstream || "?") + " · 账号 " + (pool.account || "?") +
+      "\nusage: " + JSON.stringify(j.usage || {}) +
+      "\n----------------\n" + (msg.content || "");
+  }).catch(function(e){ out.textContent = "请求失败: " + e.message; });
+}
+
+$("#btnRefresh").onclick = refresh;
+$("#btnToken").onclick = function(){
+  $("#tokenBar").classList.toggle("show");
+  $("#tokenInput").focus();
+};
+$("#btnSaveToken").onclick = function(){
+  var v = $("#tokenInput").value.trim();
+  if (!v) { toast("令牌不能为空", "err"); return; }
+  state.token = v;
+  localStorage.setItem("dspool.token", v);
+  $("#tokenBar").classList.remove("show");
+  toast("令牌已保存");
+  refresh();
+};
+$("#btnClearToken").onclick = function(){
+  state.token = ""; localStorage.removeItem("dspool.token");
+  $("#tokenInput").value = ""; $("#tokenBar").classList.remove("show");
+  toast("令牌已清除");
+  refresh();
+};
+$("#autoSel").onchange = function(){
+  clearInterval(state.timer);
+  var sec = Number(this.value);
+  if (sec > 0) state.timer = setInterval(refresh, sec * 1000);
+};
+$("#btnSend").onclick = sendTest;
+$("#testPrompt").addEventListener("keydown", function(e){
+  if (e.key === "Enter") sendTest();
+});
+document.addEventListener("visibilitychange", function(){
+  if (!document.hidden) refresh();
+});
+if (DEMO) { M = JSON.parse(JSON.stringify(DEMO_STATUS)); U = DEMO_STATUS.usage; render(); }
+else refresh();
+})();
+</script>
+</body>
+</html>

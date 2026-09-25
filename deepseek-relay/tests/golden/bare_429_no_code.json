@@ -1,0 +1,1 @@
+{"name":"bare_429_no_code","note":"裸 429 无 code：短时突发饱和，5~30s 软退避，不进冷却","status":429,"headers":{"content-type":"application/json","retry-after":"3600"},"body":"{\"error\":{\"message\":\"Too Many Requests\"}}"}

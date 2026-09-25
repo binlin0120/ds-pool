@@ -1,0 +1,18 @@
+[Unit]
+Description=Google Chrome #1 (Xvfb :99, CDP 127.0.0.1:9222, profile=pointer ds1)
+After=xvfb-webapi.service network-online.target
+Wants=xvfb-webapi.service
+
+[Service]
+User=webapi
+Group=webapi
+Environment=DISPLAY=:99
+Environment=LANG=zh_CN.UTF-8
+ExecStart=/opt/ds-pool/run_chrome.sh 1
+Restart=always
+RestartSec=5
+MemoryMax=1100M
+TasksMax=2048
+
+[Install]
+WantedBy=multi-user.target

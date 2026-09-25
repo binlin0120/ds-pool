@@ -1,0 +1,1 @@
+{"name":"official_rpm_429","note":"RPM 超限：同 key 退避即可，不必换 key","status":429,"headers":{"content-type":"application/json","retry-after":"2","x-ratelimit-reset-requests":"1.8"},"body":"{\"error\":{\"message\":\"Reached current rate limit for requests, when will the rate limit reset\",\"type\":\"requests\",\"param\":null,\"code\":\"RateLimitReached\"}}"}

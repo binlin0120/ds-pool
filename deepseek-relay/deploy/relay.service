@@ -1,0 +1,35 @@
+[Unit]
+Description=deepseek-relay (OpenAI-compatible relay + 429 triage + key pool)
+After=network-online.target
+Wants=network-online.target
+# [FIX] StartLimit* 只在 [Unit] 段生效；放 [Service] 会被 systemd 静默忽略
+#       （现网 /etc/systemd/system/ds2api.service 就把它写在 [Service] 里）
+StartLimitIntervalSec=300
+StartLimitBurst=5
+
+[Service]
+Type=simple
+User=relay
+Group=relay
+WorkingDirectory=/opt/deepseek-relay
+EnvironmentFile=/etc/deepseek-relay.env
+ExecStart=/usr/bin/python3 -m relay
+Restart=always
+RestartSec=3
+TimeoutStopSec=20
+KillSignal=SIGTERM
+LimitNOFILE=65535
+# 只监听 127.0.0.1，所以不需要 CAP_NET_BIND_SERVICE
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ProtectKernelTunables=true
+RestrictSUIDSGID=true
+ReadWritePaths=/var/log/deepseek-relay
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=deepseek-relay
+
+[Install]
+WantedBy=multi-user.target

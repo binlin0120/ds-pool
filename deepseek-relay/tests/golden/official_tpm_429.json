@@ -1,0 +1,1 @@
+{"name":"official_tpm_429","note":"TPM 超限","status":429,"headers":{"content-type":"application/json","retry-after":"7"},"body":"{\"error\":{\"message\":\"You exceeded current tokens per minute, please try again later\",\"type\":\"tokens\",\"param\":null,\"code\":\"RateLimitReached\"}}"}

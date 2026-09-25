@@ -1,0 +1,1 @@
+{"name":"web_waf_429_block","note":"chat.deepseek.com 机房 IP：华为云 WAF 拦截，带 Block-Event-Id","status":429,"headers":{"content-type":"text/html","block-event-id":"0a1b2c3d4e5f6a7b-30-clou-201"},"body":"<html><head><title>Request Blocked</title></head><body>Request Blocked</body></html>"}

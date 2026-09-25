@@ -1,0 +1,1 @@
+{"name":"client_error_400","note":"模型名不存在：绝不重试、绝不罚 key","status":400,"headers":{"content-type":"application/json"},"body":"{\"error\":{\"message\":\"The model `deepseek-v99` does not exist or you do not have access to it.\",\"type\":\"invalid_request_error\",\"param\":null,\"code\":\"model_not_found\"}}"}

@@ -1,0 +1,27 @@
+[Unit]
+Description=ds-pool-ctl root 侧控制助手 (unix socket + tcp 127.0.0.1, 白名单转发 systemctl)
+Documentation=file:///opt/ds-pool/ctl.py
+After=network.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+EnvironmentFile=/opt/ds-pool/pool.env
+ExecStart=/usr/bin/python3 /opt/ds-pool/ctl.py
+RuntimeDirectory=ds-pool-ctl
+RuntimeDirectoryMode=0755
+Restart=always
+RestartSec=3
+TimeoutStopSec=10
+NoNewPrivileges=yes
+MemoryMax=50M
+LimitNOFILE=2048
+ProtectSystem=full
+ProtectHome=yes
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=ds-pool-ctl
+
+[Install]
+WantedBy=multi-user.target

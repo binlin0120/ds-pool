@@ -1,0 +1,1 @@
+{"name":"web_login_risk_device_401","note":"ds2api 现场：网页版登录被风控 RISK_DEVICE_DETECTED","status":401,"headers":{"content-type":"application/json"},"body":"{\"error\":{\"code\":\"authentication_failed\",\"message\":\"login failed: RISK_DEVICE_DETECTED\",\"param\":null,\"type\":\"authentication_error\"}}"}

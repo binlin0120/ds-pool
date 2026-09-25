@@ -1,0 +1,29 @@
+[Unit]
+Description=ds-pool 号池网关 (DeepSeek 网页版 UWA 轮询/故障切换层)
+Documentation=file:///opt/ds-pool/pool.py
+After=network-online.target uwa-webapi.service uwa-webapi2.service uwa-webapi3.service
+Wants=network-online.target
+Wants=uwa-webapi.service uwa-webapi2.service uwa-webapi3.service
+
+[Service]
+Type=simple
+User=dspool
+Group=dspool
+EnvironmentFile=/opt/ds-pool/pool.env
+ExecStart=/usr/bin/python3 /opt/ds-pool/pool.py
+StateDirectory=ds-pool
+Restart=always
+RestartSec=3
+TimeoutStopSec=10
+SendSIGKILL=yes
+MemoryMax=150M
+LimitNOFILE=4096
+NoNewPrivileges=yes
+ProtectSystem=full
+ProtectHome=yes
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=ds-pool
+
+[Install]
+WantedBy=multi-user.target

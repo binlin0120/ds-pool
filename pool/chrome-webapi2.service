@@ -1,0 +1,19 @@
+[Unit]
+Description=Google Chrome #2 (Xvfb :99, CDP 127.0.0.1:9223, profile=pointer ds2)
+After=xvfb-webapi.service
+Wants=xvfb-webapi.service
+
+[Service]
+User=webapi
+Group=webapi
+Environment=DISPLAY=:99
+Environment=LANG=zh_CN.UTF-8
+ExecStart=/opt/ds-pool/run_chrome.sh 2
+Restart=always
+RestartSec=5
+MemoryMax=900M
+TasksMax=2048
+OOMPolicy=continue
+
+[Install]
+WantedBy=multi-user.target

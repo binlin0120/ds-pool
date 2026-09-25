@@ -1,0 +1,25 @@
+[Unit]
+Description=ds-pool 登录健康探针（CDP 指针/登录态巡检 + 自动重登）
+After=network-online.target chrome-webapi.service chrome-webapi2.service chrome-webapi3.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+Environment=PROBE_INTERVAL=120
+Environment=PROBE_RESTART_MIN=90
+Environment=PROBE_LOGIN_MIN=300
+ExecStart=/opt/uwa/venv/bin/python /opt/ds-pool/probe_login.py
+Restart=always
+RestartSec=10
+TimeoutStopSec=15
+KillMode=control-group
+MemoryMax=80M
+LimitNOFILE=2048
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=ds-pool-probe
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,1 @@
+{"name":"nginx_limit_req_429","note":"现场抓自 8787：nginx limit_req_status 429，HTML body，OpenAI 客户端解析不出来","status":429,"headers":{"server":"nginx","content-type":"text/html","x-request-id":"local"},"body":"<html>\r\n<head><title>429 Too Many Requests</title></head>\r\n<body>\r\n<center><h1>429 Too Many Requests</h1></center>\r\n<hr><center>nginx</center>\r\n</body>\r\n</html>\r\n"}

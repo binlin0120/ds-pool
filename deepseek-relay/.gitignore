@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+*.log
+.venv/
+# 不要把真实 key 写进仓库；用 deploy/relay.env 的副本，落地 chmod 600
+relay.local.env

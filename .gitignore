@@ -1,0 +1,68 @@
+# 凭据与令牌：永不入库
+_creds/
+*.env
+pool.env
+# 第三方仓库调研副本（各自有上游）
+_research/
+# 二进制 / 截图 / 打包产物
+*.zip
+*.png
+*.jpg
+*.jpeg
+*.gif
+shots/
+# 运行产物与临时输出
+*.out
+*.log
+*.bak
+*.bak.*
+_selftest.stats.json
+__pycache__/
+*.pyc
+.pytest_cache/
+# 已作废的本机隧道路线
+tunnel/
+# 远端探针与一次性排查脚本（部分含明文令牌，只留在本机）
+/_patch/
+_*.txt
+*.bak-*
+# 与本项目无关的杂项
+/deepseek简介.md
+/_patch_ab.py
+/_patch_resp_input.py
+/_patch_resp_items.py
+/_resp_input_flex.py
+
+# ---- 仅本机运维/部署/排查用，不入库（开源仓库不含这些）----
+# 根目录本地运维脚本（SSH/部署/自检/二维码/截图等，含主机信息）
+/_*.py
+/_*.sh
+/desktop_tool.py
+/diagnose_deepseek_429.py
+/server_probe.sh
+/server_ssh.env.example
+# 内部部署记录与服务器修补脚本
+/docs/
+/fix/
+# pool 内部诊断脚本与运行输出
+/pool/_raw*.txt
+/pool/_rawsse_local.py
+/pool/_selftest.summary.txt
+/pool/na_*.sh
+/pool/probe_*.sh
+/pool/start_second.sh
+/pool/start_third.sh
+/pool/durable_second.sh
+/pool/enable_docker_route.sh
+/pool/stream_diag.sh
+/pool/verify_from_container.sh
+/pool/flush_check.sh
+/pool/final_check.sh
+/pool/model_alias_check.sh
+/pool/backup_current.sh
+/pool/check_pool.sh
+/pool/journal_tail.sh
+/pool/run_raw_dump.sh
+/pool/raw_sse_dump.py
+/pool/usage_check.sh
+/pool/usage_now.sh
