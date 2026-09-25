@@ -1,0 +1,46 @@
+name: Bug 报告
+description: 提交一个可复现的问题
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢填写！请尽量提供可复现信息，否则排查会非常困难。
+        ⚠️ 涉及日志时，务必删除 token、密码、邮箱、cookie、服务器 IP 等敏感内容后再提交。
+  - type: input
+    id: version
+    attributes:
+      label: 版本与部署方式
+      description: 使用的代码版本（最新 commit 或 tag）、部署环境（Linux 发行版、Python 版本、UWA 版本）。
+      placeholder: 例如：master @ b08aa1f，Ubuntu 22.04，Python 3.10
+    validations:
+      required: true
+  - type: textarea
+    id: desc
+    attributes:
+      label: 问题描述
+      description: 发生了什么，期望的结果是什么？
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: 复现步骤
+      description: 最小可复现步骤，附上请求样例（隐藏真实 token / 账号）。
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: 日志与报错
+      description: 网关日志、/health 或 /pool/status 输出等（已脱敏）。
+    validations:
+      required: false
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期望行为
+      description: 你预期应该怎样才算正常。
+    validations:
+      required: false
