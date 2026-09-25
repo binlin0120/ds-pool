@@ -204,4 +204,4 @@ python -X utf8 tests/test_lang_inject.py    # 语言指令注入
 
 ## License
 
-未指定（自用项目，暂不声明）。
+MIT License，Copyright (c) 2026 林斌，详见 [LICENSE](LICENSE)。
